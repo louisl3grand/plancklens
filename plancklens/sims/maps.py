@@ -103,17 +103,18 @@ class cmb_maps_nlev(cmb_maps):
 
         Args:
             sims_cmb_len: lensed CMB library (e.g. *plancklens.sims.planck2018_sims.cmb_len_ffp10*)
-            cl_transf: CMB transfer function, identical in temperature and polarization
+            cl_transf: CMB temperature transfer function
             nlev_t: temperature noise level in :math:`\mu K`-arcmin
             nlev_p: polarization noise level in :math:`\mu K`-arcmin
             nside: healpy resolution of the maps
+            cl_transf_P: CMB pol transfer function (if different from cl_transf)
             lib_dir(optional): noise maps random phases will be cached there. Only relevant if *pix_lib_phas is not set*
             pix_lib_phas(optional): random phases library for the noise maps (from *plancklens.sims.phas.py*).
                                     If not set, *lib_dir* arg must be set.
 
 
     """
-    def __init__(self,sims_cmb_len, cl_transf, nlev_t, nlev_p, nside, lib_dir=None, pix_lib_phas=None):
+    def __init__(self,sims_cmb_len, cl_transf, nlev_t, nlev_p, nside, cl_transf_P=None, lib_dir=None, pix_lib_phas=None):
         if pix_lib_phas is None:
             assert lib_dir is not None
             pix_lib_phas = phas.pix_lib_phas(lib_dir, 3, (hp.nside2npix(nside),))

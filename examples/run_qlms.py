@@ -37,6 +37,12 @@ parser.add_argument('-ivp', dest='ivp', action='store_true', help='do P. filteri
 parser.add_argument('-dd', dest='dd', action='store_true', help='perform dd qlms / qcls library QEs')
 parser.add_argument('-ds', dest='ds', action='store_true', help='perform ds qlms / qcls library QEs')
 parser.add_argument('-ss', dest='ss', action='store_true', help='perform ss qlms / qcls library QEs')
+parser.add_argument('-dd_nocut', dest='dd_nocut', action='store_true', help='perform dd qlms_nocut / qcls library QEs')
+parser.add_argument('-ds_nocut', dest='ds_nocut', action='store_true', help='perform ds qlms_nocut / qcls library QEs')
+parser.add_argument('-ss_nocut', dest='ss_nocut', action='store_true', help='perform ss qlms_nocut / qcls library QEs')
+parser.add_argument('-dd_nocut_inh', dest='dd_nocut_inh', action='store_true', help='perform dd qlms_nocut_inh library QEs')
+parser.add_argument('-dd_ivfhybrid', dest='dd_ivfhybrid', action='store_true', help='perform dd qlms_hybrid library QEs')
+parser.add_argument('-dd_nocut_inh_cmbunloffset', dest='dd_nocut_inh_cmbunloffset', action='store_true', help='perform dd qlms_nocut_inh_cmbunloffset library QEs')
 parser.add_argument('-mfdd', dest='mfdd', action='store_true', help='perform dd qlms mean-fields for qcls keys')
 parser.add_argument('-kN', dest='kN', action='store', default=[], nargs='+', help='keys for QE semi-analytical noise spectra')
 
@@ -64,6 +70,21 @@ mpi.barrier()
 
 # --- unnormalized QE calculation
 qlibs = [par.qlms_dd] * args.dd +  [par.qlms_ss] * args.ss + [par.qlms_ds] * args.ds
+
+if hasattr(par, 'qlms_dd_nocut'):
+    qlibs += [par.qlms_dd_nocut] * args.dd_nocut +  [par.qlms_ss_nocut] * args.ss_nocut + [par.qlms_ds_nocut] * args.ds_nocut
+   
+if hasattr(par, 'qlms_dd_nocut_inh'):
+    qlibs += [par.qlms_dd_nocut_inh] * args.dd_nocut_inh 
+    
+       
+if hasattr(par, 'qlms_dd_ivfhybrid'):
+    qlibs += [par.qlms_dd_ivfhybrid] * args.dd_ivfhybrid 
+
+if hasattr(par, 'qlms_dd_nocut_inh_cmbunloffset'):
+    qlibs += [par.qlms_dd_nocut_inh_cmbunloffset] * args.dd_nocut_inh_cmbunloffset 
+
+
 jobs = []
 for qlib in qlibs:
     for k in args.k:
