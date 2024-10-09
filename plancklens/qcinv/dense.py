@@ -71,13 +71,14 @@ class pre_op_dense_tt:
         if cache_fname is not None:
             assert not os.path.exists(cache_fname)
 
-        nrlm = (lmax + 1) ** 2
+        nrlm = (lmax + 1) ** 2 # LL: only half of coefficients because we use real harmonics and the field is real, so m<0 coefficients are zero ? 
         trlm = np.zeros(nrlm)
         tmat = np.zeros((nrlm, nrlm))
 
         ntmpl = 0
         for t in fwd_op.n_inv_filt.templates:
-            ntmpl += t.nmodes
+            if t is not None:
+                ntmpl += t.nmodes
 
         print("computing dense preconditioner:")
         print("     lmax  =", lmax)
@@ -92,8 +93,7 @@ class pre_op_dense_tt:
 
         print("   inverting M...")
         eigv, eigw = np.linalg.eigh(tmat)
-
-        assert np.all(eigv[ntmpl:] > 0.)
+        assert np.all(eigv[ntmpl:] > 0.), print(eigv[ntmpl:])
         eigv_inv = np.zeros_like(eigv)
         eigv_inv[ntmpl:] = 1.0 / eigv[ntmpl:]
 

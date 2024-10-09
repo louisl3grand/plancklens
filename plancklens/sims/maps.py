@@ -175,6 +175,7 @@ class cmb_maps_nlev(cmb_maps):
 
 
 
+
 class cmb_maps_harmonicspace(object):
     r"""CMB simulation library combining a lensed CMB library and a transfer function
 
@@ -194,14 +195,15 @@ class cmb_maps_harmonicspace(object):
 
 
     """
-    def __init__(self, sims_cmb_len, cls_transf:dict, cls_noise:dict, noise_phas:plancklens.sims.phas.lib_phas, lib_dir=None, nside=None):
+    def __init__(self, sims_cmb_len, cls_transf:dict, cls_noise:dict, noise_phas:plancklens.sims.phas.lib_phas, lib_dir=None, nside=None, offset_phas=None):
         assert noise_phas.nfields >= 3, noise_phas.nfields
         self.sims_cmb_len = sims_cmb_len
         self.cls_transf = cls_transf
         self.cls_noise = cls_noise
         self.phas = noise_phas
         self.nside = nside
-
+        self.offset_phas = offset_phas if offset_phas is not None else (1, 0)
+        
         if hasattr(sims_cmb_len, 'lmax'):
             assert self.sims_cmb_len.lmax == self.phas.lmax, f"Lmax of lensed CMB and of noise phases should match, here {self.sims_cmb_len.lmax} and {self.phas.lmax}"
 
@@ -212,13 +214,24 @@ class cmb_maps_harmonicspace(object):
             mpi.barrier()
             hash_check(self.hashdict(), pk.load(open(fn_hash, 'rb')))
 
+
     def hashdict(self):
         ret = {'sims_cmb_len':self.sims_cmb_len.hashdict(), 'phas':self.phas.hashdict()}
+        if self.offset_phas is not (1, 0): 
+            ret['offset_phas']=self.offset_phas
+        
         for k in self.cls_noise:
             ret['noise' + k] = clhash(self.cls_noise[k])
         for k in self.cls_transf:
             ret['transf' + k] = clhash(self.cls_transf[k])
         return ret
+
+    @staticmethod
+    def offset_index(idx, block_size, offset):
+        """Offset index by amount 'offset' cyclically within blocks of size block_size
+
+        """
+        return (idx // block_size) * block_size + (idx % block_size + offset) % block_size
 
     def get_sim_tmap(self,idx):
         """Returns temperature healpy map for a simulation
@@ -265,12 +278,12 @@ class cmb_maps_harmonicspace(object):
 
     def get_sim_tnoise(self,idx):
         assert 't' in self.cls_noise
-        return hp.almxfl(self.phas.get_sim(idx, 0), np.sqrt(self.cls_noise['t']))
+        return hp.almxfl(self.phas.get_sim(self.offset_index(idx, self.offset_phas[0], self.offset_phas[1]), 0), np.sqrt(self.cls_noise['t']))
 
     def get_sim_enoise(self, idx):
         assert 'e' in self.cls_noise
-        return hp.almxfl(self.phas.get_sim(idx, 1), np.sqrt(self.cls_noise['e']))
+        return hp.almxfl(self.phas.get_sim(self.offset_index(idx, self.offset_phas[0], self.offset_phas[1]), 1), np.sqrt(self.cls_noise['e']))
 
     def get_sim_bnoise(self, idx):
         assert 'b' in self.cls_noise
-        return hp.almxfl(self.phas.get_sim(idx, 2), np.sqrt(self.cls_noise['b']))
+        return hp.almxfl(self.phas.get_sim(self.offset_index(idx, self.offset_phas[0], self.offset_phas[1]), 2), np.sqrt(self.cls_noise['b']))

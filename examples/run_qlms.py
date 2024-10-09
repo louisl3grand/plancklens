@@ -40,10 +40,14 @@ parser.add_argument('-ss', dest='ss', action='store_true', help='perform ss qlms
 parser.add_argument('-dd_nocut', dest='dd_nocut', action='store_true', help='perform dd qlms_nocut / qcls library QEs')
 parser.add_argument('-ds_nocut', dest='ds_nocut', action='store_true', help='perform ds qlms_nocut / qcls library QEs')
 parser.add_argument('-ss_nocut', dest='ss_nocut', action='store_true', help='perform ss qlms_nocut / qcls library QEs')
-parser.add_argument('-dd_nocut_inh', dest='dd_nocut_inh', action='store_true', help='perform dd qlms_nocut_inh library QEs')
+parser.add_argument('-dd_nocut_inh', dest='dd_nocut_inh', action='store_true', help='perform dd qlms_nocut_inh / qcls_nocut_inh library QEs')
+parser.add_argument('-ds_nocut_inh', dest='ds_nocut_inh', action='store_true', help='perform ds qlms_nocut_inh / qcls_nocut_inh library QEs')
+parser.add_argument('-ss_nocut_inh', dest='ss_nocut_inh', action='store_true', help='perform ss qlms_nocut_inh / qcls_nocut_inh library QEs')
 parser.add_argument('-dd_ivfhybrid', dest='dd_ivfhybrid', action='store_true', help='perform dd qlms_hybrid library QEs')
 parser.add_argument('-dd_nocut_inh_cmbunloffset', dest='dd_nocut_inh_cmbunloffset', action='store_true', help='perform dd qlms_nocut_inh_cmbunloffset library QEs')
 parser.add_argument('-mfdd', dest='mfdd', action='store_true', help='perform dd qlms mean-fields for qcls keys')
+parser.add_argument('-mfdd_nocut', dest='mfdd_nocut', action='store_true', help='perform dd qlms nocut mean-fields for qcls keys')
+parser.add_argument('-mfdd_nocut_inh', dest='mfdd_nocut_inh', action='store_true', help='perform dd qlms nocut inh mean-fields for qcls keys')
 parser.add_argument('-kN', dest='kN', action='store', default=[], nargs='+', help='keys for QE semi-analytical noise spectra')
 
 
@@ -75,7 +79,7 @@ if hasattr(par, 'qlms_dd_nocut'):
     qlibs += [par.qlms_dd_nocut] * args.dd_nocut +  [par.qlms_ss_nocut] * args.ss_nocut + [par.qlms_ds_nocut] * args.ds_nocut
    
 if hasattr(par, 'qlms_dd_nocut_inh'):
-    qlibs += [par.qlms_dd_nocut_inh] * args.dd_nocut_inh 
+    qlibs += [par.qlms_dd_nocut_inh] * args.dd_nocut_inh +  [par.qlms_ss_nocut_inh] * args.ss_nocut_inh + [par.qlms_ds_nocut_inh] * args.ds_nocut_inh
     
        
 if hasattr(par, 'qlms_dd_ivfhybrid'):
@@ -114,8 +118,32 @@ if args.mfdd:
         print("rank %s doing %s QE MF %s"%(mpi.rank, k, id0))
         par.qlms_dd.get_sim_qlm_mf(k, par.qcls_dd.mc_sims_mf[id0::2])
 mpi.barrier()
+
+if args.mfdd_nocut:
+    jobs = list(np.unique(np.concatenate([args.kA, args.kB])))
+    jobs = [(job, 0) for job in jobs] + [(job, 1) for job in jobs]
+    for i, (k, id0) in enumerate(jobs[mpi.rank::mpi.size]):
+        print("rank %s doing %s QE nocut inh MF %s"%(mpi.rank, k, id0))
+        par.qlms_dd_nocut.get_sim_qlm_mf(k, par.qcls_dd_nocut.mc_sims_mf[id0::2])
+mpi.barrier()
+
+if args.mfdd_nocut_inh:
+    jobs = list(np.unique(np.concatenate([args.kA, args.kB])))
+    jobs = [(job, 0) for job in jobs] + [(job, 1) for job in jobs]
+    for i, (k, id0) in enumerate(jobs[mpi.rank::mpi.size]):
+        print("rank %s doing %s QE nocut inh MF %s"%(mpi.rank, k, id0))
+        par.qlms_dd_nocut_inh.get_sim_qlm_mf(k, par.qcls_dd_nocut_inh.mc_sims_mf[id0::2])
+mpi.barrier()
+
 #--- unnormalized QE power spectra
 qlibs = [par.qcls_dd] * args.dd +  [par.qcls_ss] * args.ss + [par.qcls_ds] * args.ds
+if hasattr(par, 'qcls_dd_nocut_inh'):
+    qlibs += [par.qcls_dd_nocut_inh] * args.dd_nocut_inh +  [par.qcls_ss_nocut_inh] * args.ss_nocut_inh + [par.qcls_ds_nocut_inh] * args.ds_nocut_inh
+if hasattr(par, 'qcls_dd_nocut'):
+    qlibs += [par.qcls_dd_nocut] * args.dd_nocut +  [par.qcls_ss_nocut] * args.ss_nocut + [par.qcls_ds_nocut] * args.ds_nocut
+
+print(qlibs)
+
 jobs = []
 for qlib in qlibs:
     for kA in args.kA:
