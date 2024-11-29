@@ -1,0 +1,21 @@
+[build-system]
+requires = ["meson-python", "numpy"]
+build-backend = "mesonpy"
+
+[project]
+name = "plancklens"
+version = "0.0.1"
+description = "Planck lensing python pipeline"
+authors = [
+    {name = "Julien Carron", email = "to.jcarron@gmail.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["Planck", "lensing", "CMB", "Fortran"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+requires-python = ">=3.7"
+dependencies = ["numpy", "healpy", "six"]
